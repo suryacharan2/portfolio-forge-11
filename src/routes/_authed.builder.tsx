@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Eye, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, Plus, Trash2, Upload, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { usePortfolioStore } from "@/lib/portfolio-store";
+import { createPortfolio, updatePortfolio } from "@/lib/portfolios-api";
 import type { Education, Experience, Project, ThemeId } from "@/lib/portfolio-types";
 
 export const Route = createFileRoute("/_authed/builder")({
@@ -40,9 +41,52 @@ const THEMES: { id: ThemeId; name: string; desc: string; grad: string }[] = [
 ];
 
 function Builder() {
-  const { data, step, setField, setStep, setData } = usePortfolioStore();
+  const { data, step, setField, setStep, setData, currentId, currentName, setCurrentName, loadPortfolio } = usePortfolioStore();
   const navigate = Route.useNavigate();
   const [photoLoading, setPhotoLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstRender = useRef(true);
+
+  // Auto-save on changes (debounced) when we have a currentId
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    if (!currentId) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setSaving(true);
+        await updatePortfolio(currentId, { data, name: currentName });
+        setSavedAt(new Date());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setSaving(false);
+      }
+    }, 1200);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [data, currentName, currentId]);
+
+  const saveNow = async () => {
+    setSaving(true);
+    try {
+      if (currentId) {
+        await updatePortfolio(currentId, { data, name: currentName });
+        toast.success("Saved");
+      } else {
+        const row = await createPortfolio(currentName, data);
+        loadPortfolio(row.id, row.name, row.data);
+        toast.success("Saved to your account");
+      }
+      setSavedAt(new Date());
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Save failed";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const next = () => {
     if (step === 1 && (!data.fullName || !data.email)) {
