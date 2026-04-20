@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Download, Monitor, Smartphone, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Monitor, Smartphone, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PortfolioPreview } from "@/components/portfolio-preview";
 import { usePortfolioStore } from "@/lib/portfolio-store";
-import { downloadPortfolioZip } from "@/lib/portfolio-builder";
+import { downloadPortfolioZip, downloadPortfolioPdf } from "@/lib/portfolio-builder";
 import type { ThemeId } from "@/lib/portfolio-types";
 
 export const Route = createFileRoute("/_authed/preview")({
@@ -34,6 +34,7 @@ function PreviewPage() {
   const { data, setField } = usePortfolioStore();
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [downloading, setDownloading] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -45,6 +46,19 @@ function PreviewPage() {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handlePdf = async () => {
+    setPrinting(true);
+    try {
+      await downloadPortfolioPdf(data);
+      toast.success("Print dialog opened — choose 'Save as PDF'.");
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Could not open print dialog.");
+    } finally {
+      setPrinting(false);
     }
   };
 
@@ -75,6 +89,10 @@ function PreviewPage() {
                 <Smartphone className="h-4 w-4" /> Mobile
               </button>
             </div>
+            <Button variant="outline" onClick={handlePdf} disabled={printing}>
+              {printing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              Download PDF
+            </Button>
             <Button variant="hero" onClick={handleDownload} disabled={downloading}>
               {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               Download HTML
