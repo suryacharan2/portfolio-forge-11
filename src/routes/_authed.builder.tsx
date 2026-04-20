@@ -119,14 +119,29 @@ function Builder() {
       <SiteHeader />
       <div className="container mx-auto px-4 py-10 max-w-4xl">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-[200px]">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Step {step} of {TOTAL_STEPS}</p>
               <h1 className="font-display text-3xl font-bold mt-1">{STEP_TITLES[step - 1]}</h1>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/preview"><Eye className="h-4 w-4" /> Preview</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={saveNow} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {currentId ? "Save" : "Save to account"}
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/preview"><Eye className="h-4 w-4" /> Preview</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <Input
+              value={currentName}
+              onChange={(e) => setCurrentName(e.target.value)}
+              placeholder="Portfolio name"
+              className="max-w-sm h-8"
+            />
+            {savedAt && <span className="text-xs text-muted-foreground">Saved {savedAt.toLocaleTimeString()}</span>}
           </div>
           <Progress value={(step / TOTAL_STEPS) * 100} className="h-2" />
         </div>
