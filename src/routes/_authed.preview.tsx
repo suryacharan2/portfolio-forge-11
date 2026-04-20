@@ -77,7 +77,7 @@ function PreviewPage() {
             </div>
             <Button variant="hero" onClick={handleDownload} disabled={downloading}>
               {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Download ZIP
+              Download HTML
             </Button>
           </div>
         </div>
