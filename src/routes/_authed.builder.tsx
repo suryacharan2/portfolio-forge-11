@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { usePortfolioStore } from "@/lib/portfolio-store";
 import type { Education, Experience, Project, ThemeId } from "@/lib/portfolio-types";
 
-export const Route = createFileRoute("/builder")({
+export const Route = createFileRoute("/_authed/builder")({
   head: () => ({
     meta: [
       { title: "Portfolio Builder — PortfolioForge" },

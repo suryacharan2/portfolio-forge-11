@@ -10,33 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedPreviewRouteImport } from './routes/_authed.preview'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed.dashboard'
+import { Route as AuthedBuilderRouteImport } from './routes/_authed.builder'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PreviewRoute = PreviewRouteImport.update({
-  id: '/preview',
-  path: '/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BuilderRoute = BuilderRouteImport.update({
-  id: '/builder',
-  path: '/builder',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -58,9 +48,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedPreviewRoute = AuthedPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedBuilderRoute = AuthedBuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
   getParentRoute: () => AuthedRoute,
 } as any)
 
@@ -68,21 +68,21 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/builder': typeof BuilderRoute
   '/contact': typeof ContactRoute
-  '/preview': typeof PreviewRoute
   '/pricing': typeof PricingRoute
+  '/builder': typeof AuthedBuilderRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/preview': typeof AuthedPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/builder': typeof BuilderRoute
   '/contact': typeof ContactRoute
-  '/preview': typeof PreviewRoute
   '/pricing': typeof PricingRoute
+  '/builder': typeof AuthedBuilderRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/preview': typeof AuthedPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,11 +90,11 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/builder': typeof BuilderRoute
   '/contact': typeof ContactRoute
-  '/preview': typeof PreviewRoute
   '/pricing': typeof PricingRoute
+  '/_authed/builder': typeof AuthedBuilderRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/preview': typeof AuthedPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -102,32 +102,32 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
-    | '/builder'
     | '/contact'
-    | '/preview'
     | '/pricing'
+    | '/builder'
     | '/dashboard'
+    | '/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/auth'
-    | '/builder'
     | '/contact'
-    | '/preview'
     | '/pricing'
+    | '/builder'
     | '/dashboard'
+    | '/preview'
   id:
     | '__root__'
     | '/'
     | '/_authed'
     | '/about'
     | '/auth'
-    | '/builder'
     | '/contact'
-    | '/preview'
     | '/pricing'
+    | '/_authed/builder'
     | '/_authed/dashboard'
+    | '/_authed/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,9 +135,7 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
-  BuilderRoute: typeof BuilderRoute
   ContactRoute: typeof ContactRoute
-  PreviewRoute: typeof PreviewRoute
   PricingRoute: typeof PricingRoute
 }
 
@@ -150,25 +148,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/preview': {
-      id: '/preview'
-      path: '/preview'
-      fullPath: '/preview'
-      preLoaderRoute: typeof PreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/builder': {
-      id: '/builder'
-      path: '/builder'
-      fullPath: '/builder'
-      preLoaderRoute: typeof BuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -199,6 +183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/preview': {
+      id: '/_authed/preview'
+      path: '/preview'
+      fullPath: '/preview'
+      preLoaderRoute: typeof AuthedPreviewRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/dashboard': {
       id: '/_authed/dashboard'
       path: '/dashboard'
@@ -206,15 +197,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/builder': {
+      id: '/_authed/builder'
+      path: '/builder'
+      fullPath: '/builder'
+      preLoaderRoute: typeof AuthedBuilderRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
 interface AuthedRouteChildren {
+  AuthedBuilderRoute: typeof AuthedBuilderRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedPreviewRoute: typeof AuthedPreviewRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedBuilderRoute: AuthedBuilderRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedPreviewRoute: AuthedPreviewRoute,
 }
 
 const AuthedRouteWithChildren =
@@ -225,9 +227,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
-  BuilderRoute: BuilderRoute,
   ContactRoute: ContactRoute,
-  PreviewRoute: PreviewRoute,
   PricingRoute: PricingRoute,
 }
 export const routeTree = rootRouteImport
