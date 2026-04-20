@@ -89,6 +89,10 @@ function PreviewPage() {
                 <Smartphone className="h-4 w-4" /> Mobile
               </button>
             </div>
+            <Button variant="outline" onClick={handlePdf} disabled={printing}>
+              {printing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              Download PDF
+            </Button>
             <Button variant="hero" onClick={handleDownload} disabled={downloading}>
               {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               Download HTML
