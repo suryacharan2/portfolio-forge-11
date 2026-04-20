@@ -479,6 +479,39 @@ Theme: **${data.theme}**
  * CSS and JS are inlined so the user can just double-click to open it
  * in any browser — no unzipping, no broken file paths.
  */
+/**
+ * Opens the portfolio in a hidden iframe and triggers the browser print dialog,
+ * which lets the user "Save as PDF". Includes print-friendly CSS so backgrounds,
+ * colors, and full content are preserved across pages.
+ */
+export async function downloadPortfolioPdf(data: PortfolioData): Promise<void> {
+  const { html, css, js } = buildPortfolioHtml(data);
+  const printCss = `
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      html, body { background: var(--bg) !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .nav, #particles, #matrix, .grid-bg, .blob { display: none !important; }
+      [data-aos] { opacity: 1 !important; transform: none !important; }
+      .skill-bar-fill { transition: none !important; }
+      .section { padding: 24px 0 !important; page-break-inside: avoid; }
+      .hero { min-height: auto !important; padding: 24px 0 !important; page-break-after: avoid; }
+      .card { break-inside: avoid; page-break-inside: avoid; }
+      a { color: inherit !important; text-decoration: none !important; }
+    }
+  `;
+  const inlined = html
+    .replace('<link rel="stylesheet" href="style.css" />', `<style>${css}\n${printCss}</style>`)
+    .replace('<script src="script.js"></script>', `<script>${js}\nwindow.addEventListener('load',()=>{setTimeout(()=>{window.focus();window.print();},800)});<\/script>`);
+
+  const w = window.open("", "_blank");
+  if (!w) {
+    throw new Error("Popup blocked. Please allow popups for this site to download as PDF.");
+  }
+  w.document.open();
+  w.document.write(inlined);
+  w.document.close();
+}
+
 export async function downloadPortfolioZip(data: PortfolioData): Promise<void> {
   const { html, css, js } = buildPortfolioHtml(data);
   const inlined = html
