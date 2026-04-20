@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Download, Monitor, Smartphone, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Monitor, Smartphone, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PortfolioPreview } from "@/components/portfolio-preview";
 import { usePortfolioStore } from "@/lib/portfolio-store";
-import { downloadPortfolioZip } from "@/lib/portfolio-builder";
+import { downloadPortfolioZip, downloadPortfolioPdf } from "@/lib/portfolio-builder";
 import type { ThemeId } from "@/lib/portfolio-types";
 
 export const Route = createFileRoute("/_authed/preview")({
