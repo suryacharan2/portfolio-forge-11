@@ -31,7 +31,7 @@ export async function createPortfolio(name: string, data: PortfolioData): Promis
   if (!user.user) throw new Error("Not authenticated");
   const { data: row, error } = await supabase
     .from("portfolios")
-    .insert({ name, data: data as unknown as Record<string, unknown>, theme: data.theme, user_id: user.user.id })
+    .insert({ name, data: data as unknown as never, theme: data.theme, user_id: user.user.id })
     .select()
     .single();
   if (error) throw error;
@@ -39,10 +39,10 @@ export async function createPortfolio(name: string, data: PortfolioData): Promis
 }
 
 export async function updatePortfolio(id: string, patch: { name?: string; data?: PortfolioData }) {
-  const update: Record<string, unknown> = {};
+  const update: { name?: string; data?: never; theme?: string } = {};
   if (patch.name !== undefined) update.name = patch.name;
   if (patch.data !== undefined) {
-    update.data = patch.data as unknown as Record<string, unknown>;
+    update.data = patch.data as unknown as never;
     update.theme = patch.data.theme;
   }
   const { error } = await supabase.from("portfolios").update(update).eq("id", id);
