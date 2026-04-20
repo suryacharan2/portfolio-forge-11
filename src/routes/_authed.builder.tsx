@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Eye, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, Plus, Trash2, Upload, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { usePortfolioStore } from "@/lib/portfolio-store";
+import { createPortfolio, updatePortfolio } from "@/lib/portfolios-api";
 import type { Education, Experience, Project, ThemeId } from "@/lib/portfolio-types";
 
-export const Route = createFileRoute("/builder")({
+export const Route = createFileRoute("/_authed/builder")({
   head: () => ({
     meta: [
       { title: "Portfolio Builder — PortfolioForge" },
@@ -40,9 +41,52 @@ const THEMES: { id: ThemeId; name: string; desc: string; grad: string }[] = [
 ];
 
 function Builder() {
-  const { data, step, setField, setStep, setData } = usePortfolioStore();
+  const { data, step, setField, setStep, setData, currentId, currentName, setCurrentName, loadPortfolio } = usePortfolioStore();
   const navigate = Route.useNavigate();
   const [photoLoading, setPhotoLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstRender = useRef(true);
+
+  // Auto-save on changes (debounced) when we have a currentId
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    if (!currentId) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setSaving(true);
+        await updatePortfolio(currentId, { data, name: currentName });
+        setSavedAt(new Date());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setSaving(false);
+      }
+    }, 1200);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [data, currentName, currentId]);
+
+  const saveNow = async () => {
+    setSaving(true);
+    try {
+      if (currentId) {
+        await updatePortfolio(currentId, { data, name: currentName });
+        toast.success("Saved");
+      } else {
+        const row = await createPortfolio(currentName, data);
+        loadPortfolio(row.id, row.name, row.data);
+        toast.success("Saved to your account");
+      }
+      setSavedAt(new Date());
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Save failed";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const next = () => {
     if (step === 1 && (!data.fullName || !data.email)) {
@@ -75,14 +119,29 @@ function Builder() {
       <SiteHeader />
       <div className="container mx-auto px-4 py-10 max-w-4xl">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-[200px]">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Step {step} of {TOTAL_STEPS}</p>
               <h1 className="font-display text-3xl font-bold mt-1">{STEP_TITLES[step - 1]}</h1>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/preview"><Eye className="h-4 w-4" /> Preview</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={saveNow} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {currentId ? "Save" : "Save to account"}
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/preview"><Eye className="h-4 w-4" /> Preview</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <Input
+              value={currentName}
+              onChange={(e) => setCurrentName(e.target.value)}
+              placeholder="Portfolio name"
+              className="max-w-sm h-8"
+            />
+            {savedAt && <span className="text-xs text-muted-foreground">Saved {savedAt.toLocaleTimeString()}</span>}
           </div>
           <Progress value={(step / TOTAL_STEPS) * 100} className="h-2" />
         </div>

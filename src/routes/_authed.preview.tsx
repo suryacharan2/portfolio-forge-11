@@ -10,7 +10,7 @@ import { usePortfolioStore } from "@/lib/portfolio-store";
 import { downloadPortfolioZip } from "@/lib/portfolio-builder";
 import type { ThemeId } from "@/lib/portfolio-types";
 
-export const Route = createFileRoute("/preview")({
+export const Route = createFileRoute("/_authed/preview")({
   head: () => ({
     meta: [
       { title: "Preview & Download — PortfolioForge" },
