@@ -34,6 +34,7 @@ function PreviewPage() {
   const { data, setField } = usePortfolioStore();
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [downloading, setDownloading] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -45,6 +46,19 @@ function PreviewPage() {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handlePdf = async () => {
+    setPrinting(true);
+    try {
+      await downloadPortfolioPdf(data);
+      toast.success("Print dialog opened — choose 'Save as PDF'.");
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Could not open print dialog.");
+    } finally {
+      setPrinting(false);
     }
   };
 
