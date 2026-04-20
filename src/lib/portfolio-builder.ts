@@ -474,19 +474,24 @@ Theme: **${data.theme}**
   return { html, css, js, readme };
 }
 
+/**
+ * Downloads the portfolio as a single self-contained .html file.
+ * CSS and JS are inlined so the user can just double-click to open it
+ * in any browser — no unzipping, no broken file paths.
+ */
 export async function downloadPortfolioZip(data: PortfolioData): Promise<void> {
-  const [{ default: JSZip }, { default: saveAs }] = await Promise.all([
-    import("jszip"),
-    import("file-saver"),
-  ]);
-  const { html, css, js, readme } = buildPortfolioHtml(data);
-  const zip = new JSZip();
-  zip.file("index.html", html);
-  zip.file("style.css", css);
-  zip.file("script.js", js);
-  zip.file("README.md", readme);
-  zip.folder("assets");
-  const blob = await zip.generateAsync({ type: "blob" });
+  const { html, css, js } = buildPortfolioHtml(data);
+  const inlined = html
+    .replace('<link rel="stylesheet" href="style.css" />', `<style>${css}</style>`)
+    .replace('<script src="script.js"></script>', `<script>${js}<\/script>`);
+  const blob = new Blob([inlined], { type: "text/html;charset=utf-8" });
   const safe = (data.fullName || "portfolio").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  saveAs(blob, `${safe}-portfolio.zip`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safe}-portfolio.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
